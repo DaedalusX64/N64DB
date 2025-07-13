@@ -55,7 +55,7 @@ for rom in Roms/$EXTENSION; do
     touch "Output/Log/$romname.txt" 
     "${TARGET[@]}" "$rom" > "Output/Log/$romname.txt" &
     pid=$!
-    sleep $SLEEP_TIME
+
 
 case $(uname -s) in
 Darwin)
@@ -64,9 +64,14 @@ Darwin)
 ;;
 Linux)
     # Run OBS and capture video -- OBS should only be run once
-    sleep 30 # makes the video 30 seconds
+
     file=$(ls -1r $OUTPUT_DIR/*.mkv)
-    ffmpeg -y -i "$file" "Output/Video/$romname.webm"
+     (echo '{"op":1,"d":{"rpcVersion":1}}'; sleep 0.5; echo '{"op":6,"d":{"requestType":"StartRecord","requestId":"start1"}}') | websocat "ws://127.0.0.1:4455"
+    sleep 30 # makes the video 30 seconds
+    (echo '{"op":1,"d":{"rpcVersion":1}}'; sleep 0.5; echo '{"op":6,"d":{"requestType":"StopRecord","requestId":"start1"}}') | websocat "ws://127.0.0.1:4455"
+   
+    ffmpeg -y -loglevel error -i "$file" "Output/Video/$romname.webm"
+    ffmpeg -y -loglevel error -hide_banner -ss 00:00:05 -t 1 -i "$file" -frames:v 1 -q:v 2 "Output/Image/$romname.png"
     rm -f "$file"
 ;;
 default)
