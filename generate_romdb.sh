@@ -16,9 +16,7 @@ CREATE TABLE games (
   game_name TEXT NOT NULL,
   daedcrc TEXT NOT NULL,
   SaveType TEXT NOT NULL,
-  country TEXT NOT NULL,
-  preview_image TEXT NOT NULL,
-  preview_video TEXT NOT NULL
+  country TEXT NOT NULL
 );
 EOF
 fi
@@ -55,14 +53,13 @@ for i in Roms/*.z64; do
   gamename_sql=$(echo "$gamename" | sed "s/'/''/g")
  
   # Preview HTML snippets
-  preview_image="<img src='Image/${shasum}.png' style='width:320px;height:200px;'>"
-  preview_video="<video width='320' height='200' controls><source src='Video/${shasum}.webm' type='video/mp4'></video>"
-  preview_image_sql=$(echo "$preview_image" | sed "s/'/''/g")
-  preview_video_sql=$(echo "$preview_video" | sed "s/'/''/g")
+
+  # preview_image_sql=$(echo "$preview_image" | sed "s/'/''/g")
+  # preview_video_sql=$(echo "$preview_video" | sed "s/'/''/g")
 
 
   # Country detection
-  country=$(hexdump -s 62 -n 1 -e '"%c"' "$i" | cut -c1)
+  # country=$(hexdump -s 62 -n 1 -e '"%c"' "$i" | cut -c1)
   case $country in
     A) country="All";;
     B) country="Brazil";;
@@ -87,8 +84,8 @@ for i in Roms/*.z64; do
 
   # Insert into database
   sqlite3 "$db" <<EOF 
-INSERT OR IGNORE INTO games (shasum, daedcrc, game_name, SaveType, country, preview_image, preview_video)
-VALUES ('$shasum', '$daed_crc', '$gamename_sql', 'Unknown', '$country', '$preview_image_sql', '$preview_video_sql');
+INSERT OR IGNORE INTO games (shasum, daedcrc, game_name, SaveType, country)
+VALUES ('$shasum', '$daed_crc', '$gamename_sql', 'Unknown', '$country');
 EOF
 
 done
@@ -137,17 +134,16 @@ done
   </tr>"
 
 sqlite3 -separator $'\t' "$db" \
-"SELECT daedcrc, game_name, SaveType, country, preview_image, preview_video FROM games;" |
-while IFS=$'\t' read -r daed_crc game savetype country img vid; do
+"SELECT shasum, daedcrc, game_name, SaveType, country FROM games;" |
+while IFS=$'\t' read -r shasum daed_crc game savetype country; do
   echo "<tr>"
   echo "<td>$daed_crc</td>"
   echo "<td>$game</td>"
   echo "<td>$savetype</td>"
   echo "<td>$country</td>"
-  echo "<td>$img</td>"
-  echo "<td>$vid</td>"
-  echo "<td>$debug</td>"
-  echo "<td></td>"
+  echo "<td><img src='Image/${shasum}.png' style='width:320px;height:200px;'></td>"
+  echo "<td><video width='320' height='200' controls><source src='Video/${shasum}.webm' type='video/webm'></video></td>"
+  echo "<td><a href='Log/${shasum}.txt'>View Log</a></td>"
   echo "</tr>"
 done
 
