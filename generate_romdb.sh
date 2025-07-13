@@ -52,11 +52,6 @@ for i in Roms/*.z64; do
   gamename=$(clean_name "$romname")
   gamename_sql=$(echo "$gamename" | sed "s/'/''/g")
  
-  # Preview HTML snippets
-
-  # preview_image_sql=$(echo "$preview_image" | sed "s/'/''/g")
-  # preview_video_sql=$(echo "$preview_video" | sed "s/'/''/g")
-
 
   # Country detection
   country=$(hexdump -s 62 -n 1 -e '"%c"' "$i" | cut -c1)
@@ -142,7 +137,7 @@ while IFS=$'\t' read -r shasum daed_crc game savetype country; do
   echo "<td>$savetype</td>"
   echo "<td>$country</td>"
   echo "<td><img src='Image/${shasum}.png' style='width:320px;height:200px;'></td>"
-  echo "<td><video width='320' height='200' controls><source src='Video/${shasum}.webm' type='video/webm'></video></td>"
+  echo "<td><video width='320' height='200' controls preload='none'><source src='Video/${shasum}.webm' type='video/webm'></video></td>"
 cat <<EOF
   <td>
     <div id="log-container-${shasum}">
