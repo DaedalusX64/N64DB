@@ -40,10 +40,10 @@ for i in Roms/*.z64; do
   header=$(xxd -p -c 64 -l 64 "$i")
   crc1=$(reverse_crc "${header:32:8}")
   crc2=$(reverse_crc "${header:40:8}") 
-  country="${header:124:2}"
+  countrycode="${header:124:2}"
 
   # Convert to Daedalus CRC
-  daed_crc=$crc1$crc2-$country
+  daed_crc=$crc1$crc2-$countrycode
   
   filename=$(basename "$i")
   romname="${filename%.z64}"
@@ -59,7 +59,7 @@ for i in Roms/*.z64; do
 
 
   # Country detection
-  # country=$(hexdump -s 62 -n 1 -e '"%c"' "$i" | cut -c1)
+  country=$(hexdump -s 62 -n 1 -e '"%c"' "$i" | cut -c1)
   case $country in
     A) country="All";;
     B) country="Brazil";;
@@ -143,7 +143,32 @@ while IFS=$'\t' read -r shasum daed_crc game savetype country; do
   echo "<td>$country</td>"
   echo "<td><img src='Image/${shasum}.png' style='width:320px;height:200px;'></td>"
   echo "<td><video width='320' height='200' controls><source src='Video/${shasum}.webm' type='video/webm'></video></td>"
-  echo "<td><a href='Log/${shasum}.txt'>View Log</a></td>"
+cat <<EOF
+  <td>
+    <div id="log-container-${shasum}">
+      <a href="Log/${shasum}.txt" target="_blank">View Log</a><br>
+      <pre id="log-${shasum}" style="max-height: 200px; overflow: auto; background: #f0f0f0;"></pre>
+    </div>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const container = document.getElementById("log-container-${shasum}");
+        const preElem = document.getElementById("log-${shasum}");
+        fetch("Log/${shasum}.txt")
+          .then(res => {
+            if (!res.ok) throw new Error("Not found");
+            return res.text();
+          })
+          .then(txt => {
+            const lines = txt.trim().split(/\\r?\\n/).slice(-5);
+            preElem.textContent = lines.join("\\n");
+          })
+          .catch(() => {
+            container.style.display = "none";
+          });
+      });
+    </script>
+  </td>
+EOF
   echo "</tr>"
 done
 
