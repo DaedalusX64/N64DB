@@ -53,7 +53,8 @@ for rom in Roms/$EXTENSION; do
     # Generate the debug text document, get the process ID and sleep for 10 seconds
     romname=$(shasum "$rom" | cut -f1 -d " ")
     touch "Output/Log/$romname.txt" 
-    "${TARGET[@]}" "$rom" > "Output/Log/$romname.txt" &
+    "${TARGET[@]}" "$rom" 2>&1 | head -c 2M > "Output/Log/$romname.txt" # Cap log to 2MB to save overly large log files. If file is 2MB then there's something very wrong
+    
     pid=$!
 
 
